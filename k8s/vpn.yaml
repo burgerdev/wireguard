@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wireguard
+spec:
+  selector:
+    matchLabels:
+      component: wireguard
+  template:
+    metadata:
+      name: wireguard
+      labels:
+        component: wireguard
+    spec:
+      containers:
+      - name: main
+        image: "burgerdev/wireguard"
+        imagePullPolicy: Always
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN"]
+        env:
+        - name: WG_PRIVATE_KEY_FILE
+          value: "/secrets/server.key"
+        envFrom:
+        - prefix: "WG_"
+          configMapRef:
+            name: config
+        - prefix: "WG_"
+          secretRef:
+            name: peer
+        volumeMounts:
+        - name: secrets
+          mountPath: "/secrets"
+          readOnly: true
+      volumes:
+      - name: secrets
+        secret:
+          secretName: keys
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wireguard
+spec:
+  type: LoadBalancer
+  selector:
+    component: wireguard
+  ports:
+    - name: wg
+      protocol: UDP
+      port: 9494

@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: "vpn-"
+
+resources:
+- vpn.yaml
+
+
+configMapGenerator:
+- name: config
+  env: config.env
+
+secretGenerator:
+- name: keys
+  files:
+  - server.key=secret/server.key
+- name: peer
+  env: secret/peer.env
